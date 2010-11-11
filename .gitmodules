@@ -1,0 +1,3 @@
+[submodule "libs/clam"]
+	path = libs/clam
+	url = src@higgr.com:git/cloudvibe/clam.git
