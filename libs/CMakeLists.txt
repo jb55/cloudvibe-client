@@ -1,3 +1,3 @@
 
-ADD_SUBDIRECTORY(features)
+ADD_SUBDIRECTORY(music_features)
 
