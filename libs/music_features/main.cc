@@ -31,7 +31,6 @@ Adapted from MATLAB code by Chris Harte at Queen Mary
 
 #define USE_SNDFILE 1
 
-#include <list>
 #include <iostream>
 #include <fstream>
 #include <cmath>
@@ -65,7 +64,6 @@ const char * usage =
 	" ChordExtractor -s schema.sc\n"
 	" ChordExtractor -f .beats song1.wav song2.mp3 song3.ogg\n"
 	;
-
 const char * schemaContent = 
 "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n"
 "<DescriptionScheme>\n"
@@ -134,6 +132,153 @@ const char * schemaContent =
 "</DescriptionScheme>\n"
 ;
 
+class ChordExtractorDescriptionDumper
+{
+	Simac::ChordExtractor & _extractor;
+
+	CLAM::DescriptionScheme _schema;
+	CLAM::DescriptionDataPool * _pool;
+	unsigned _currentFrame;
+	CLAM::TData * _tunningPositions;
+	CLAM::TData * _tunningStrength;
+	CLAM::TData * _firstChordRelevance;
+	CLAM::TData * _secondChordRelevance;
+	CLAM::TData * _firstChordIndex;
+	CLAM::TData * _secondChordIndex;
+	CLAM::TData * _energies;
+	unsigned _lastChord;
+	CLAM::DataArray * _pcps;
+	CLAM::DataArray * _chordChorrelation;
+	CLAM::DataArray * _chordSegmentation;
+	unsigned _hop;
+	unsigned _firstFrameOffset;
+	CLAM::TData _samplingRate;
+public:
+	ChordExtractorDescriptionDumper(unsigned frames, unsigned hop, unsigned framesize, CLAM::TData samplingRate, Simac::ChordExtractor & extractor)
+		: _extractor(extractor)
+		, _currentFrame(0)
+		, _lastChord(0)
+		, _hop(hop)
+//		, _firstFrameOffset((framesize-hop)/2)
+		, _firstFrameOffset(0)
+		, _samplingRate(samplingRate)
+	{
+		_schema.AddAttribute<CLAM::DataArray>("Song", "Chords_Harte");
+	//	_schema.AddAttribute<CLAM::DataArray>("Song", "DebugFrameSegments");
+		_schema.AddAttribute<Simac::FrameDivision>("Song", "Frames");
+		_schema.AddAttribute<CLAM::TData>("Frame", "TunningPosition");
+		_schema.AddAttribute<CLAM::TData>("Frame", "TunningStrength");
+		_schema.AddAttribute<CLAM::TData>("Frame", "FirstChordCandidateRelevance");
+		_schema.AddAttribute<CLAM::TData>("Frame", "SecondChordCandidateRelevance");
+		_schema.AddAttribute<CLAM::TData>("Frame", "FirstChordIndex");
+		_schema.AddAttribute<CLAM::TData>("Frame", "SecondChordIndex");
+		_schema.AddAttribute<CLAM::TData>("Frame", "Energy");
+		_schema.AddAttribute<Simac::Enumerated>("ExtractedChord", "Root");
+		_schema.AddAttribute<Simac::Enumerated>("ExtractedChord", "Mode");
+		_schema.AddAttribute<CLAM::DataArray>("Frame", "HartePcp");
+		_schema.AddAttribute<CLAM::DataArray>("Frame", "HarteChordCorrelation");
+
+		_pool = new CLAM::DescriptionDataPool(_schema);
+		_pool->SetNumberOfContexts("Song", 1);
+		_pool->SetNumberOfContexts("Frame", frames);
+		_pool->SetNumberOfContexts("ExtractedChord", 0);
+
+		Simac::FrameDivision & frameDivision = _pool->GetWritePool<Simac::FrameDivision>("Song","Frames")[0];
+		frameDivision.SetFirstCenter(0);
+	//	frameDivision.SetFirstCenter(framesize/2);
+		frameDivision.SetInterCenterGap(hop);
+		_tunningPositions = _pool->GetWritePool<CLAM::TData>("Frame","TunningPosition");
+		_tunningStrength = _pool->GetWritePool<CLAM::TData>("Frame","TunningStrength");
+		_firstChordRelevance = _pool->GetWritePool<CLAM::TData>("Frame","FirstChordCandidateRelevance");
+		_secondChordRelevance = _pool->GetWritePool<CLAM::TData>("Frame","SecondChordCandidateRelevance");
+		_firstChordIndex = _pool->GetWritePool<CLAM::TData>("Frame","FirstChordIndex"); // TODO: Kludge!!
+		_secondChordIndex = _pool->GetWritePool<CLAM::TData>("Frame","SecondChordIndex"); // TODO: Kludge!!
+		_chordSegmentation = _pool->GetWritePool<CLAM::DataArray>("Song","Chords_Harte");
+		_pcps = _pool->GetWritePool<CLAM::DataArray>("Frame","HartePcp");
+		_chordChorrelation = _pool->GetWritePool<CLAM::DataArray>("Frame","HarteChordCorrelation");
+		_energies = _pool->GetWritePool<CLAM::TData>("Frame","Energy");
+	}
+	const CLAM::DescriptionDataPool & getPool() const
+	{
+		return *_pool;
+	}
+	~ChordExtractorDescriptionDumper()
+	{
+		delete _pool;
+	}
+
+	void doIt()
+	{
+		const std::vector<double> & pcp = _extractor.pcp(); //pointer to chromagram data
+		const std::vector<double> & chromagram = _extractor.chromagram(); //pointer to chromagram data
+		const Simac::CircularPeakPicking::PeakList & peaks = _extractor.peaks(); //pointer to chromagram data
+		const std::vector<double> & correlation = _extractor.chordCorrelation(); //pointer to chromagram data
+		std::string estimation = _extractor.chordEstimation();
+
+		CLAM_ASSERT(pcp.size()==12, "Unexpected pcp size" );
+		_pcps[_currentFrame].Resize(pcp.size());
+		_pcps[_currentFrame].SetSize(pcp.size());
+		for (unsigned i =0; i<pcp.size(); i++)
+			_pcps[_currentFrame][i]=pcp[i];
+
+
+		unsigned correlationSize = 24;
+		_chordChorrelation[_currentFrame].Resize(correlationSize);
+		_chordChorrelation[_currentFrame].SetSize(correlationSize);
+		for (unsigned i =0; i<correlationSize; i++)
+			_chordChorrelation[_currentFrame][i]=correlation[i+1];
+
+		_tunningPositions[_currentFrame] = _extractor.tunning();
+		_tunningStrength[_currentFrame] = _extractor.tunningStrength();
+		CLAM::TData firstCandidateWeight = correlation[_extractor.firstCandidate()];
+		CLAM::TData secondCandidateWeight = correlation[_extractor.secondCandidate()];
+		CLAM::TData noCandidateWeigth = correlation[0];
+		_firstChordRelevance[_currentFrame] = firstCandidateWeight/noCandidateWeigth;
+		_secondChordRelevance[_currentFrame] = secondCandidateWeight/noCandidateWeigth;
+		_firstChordIndex[_currentFrame] = _extractor.firstCandidate();
+		_secondChordIndex[_currentFrame] = _extractor.secondCandidate();
+		_energies[_currentFrame] = _extractor.energy();
+		unsigned currentChord = firstCandidateWeight*0.6<=noCandidateWeigth || noCandidateWeigth<0.001 ?
+				0 : _extractor.firstCandidate();
+
+		CLAM::TData currentTime = (_currentFrame*_hop+_firstFrameOffset)/_samplingRate;
+//		_debugFrameSegmentation[0].AddElem(currentTime);
+
+		_currentFrame++;
+	}
+	void endExtraction()
+	{
+		for (unsigned frame=_currentFrame; frame<_pool->GetNumberOfContexts("Frame"); frame++)
+		{
+			_pcps[frame].Resize(12);
+			_pcps[frame].SetSize(12);
+			_chordChorrelation[frame].Resize(24);
+			_chordChorrelation[frame].SetSize(24);
+		}
+	
+		CLAM::TData currentTime = (_currentFrame*_hop+_firstFrameOffset)/_samplingRate;
+		_extractor.closeLastSegment(currentTime);
+
+		CLAM_ASSERT(_pool->GetNumberOfContexts("ExtractedChord")==0, "ExtractedChord pool  not empty");
+
+		_pool->SetNumberOfContexts("ExtractedChord",_extractor.chordIndexes().size());
+		if( not _extractor.chordIndexes().empty())
+		{
+			Simac::Enumerated * root = _pool->GetWritePool<Simac::Enumerated>("ExtractedChord","Root");
+			Simac::Enumerated * mode = _pool->GetWritePool<Simac::Enumerated>("ExtractedChord","Mode");
+			for (unsigned segment=0; segment<_extractor.chordIndexes().size(); ++segment)
+			{
+				root[segment] = _extractor.root(_extractor.chordIndexes()[segment]);
+				mode[segment] = _extractor.mode(_extractor.chordIndexes()[segment]);
+				_chordSegmentation[0].AddElem(_extractor.segmentation().onsets()[segment]);
+				_chordSegmentation[0].AddElem(_extractor.segmentation().offsets()[segment]);
+			}
+		}
+		std::cout << "Frames " << _currentFrame << " of " <<  _pool->GetNumberOfContexts("Frame") << std::endl;
+	}
+
+};
+
 int processFile(const std::string & waveFile, const std::string & suffix, unsigned segmentationMethod)
 {
 	CLAM::MonoAudioFileReaderConfig cfg;
@@ -157,6 +302,7 @@ int processFile(const std::string & waveFile, const std::string & suffix, unsign
 	unsigned framesize = chordExtractor.frameSize();
 	unsigned hop = chordExtractor.hop();
 	unsigned long nFrames = floor((float)(nsamples-framesize+hop)/(float)hop);	// no. of time windows
+	ChordExtractorDescriptionDumper dumper(nFrames, hop, framesize, samplingRate, chordExtractor);
 
 	std::cout << "Frame size: " << framesize << std::endl;
 	std::cout << "Hop size: " << hop << std::endl;
@@ -182,9 +328,11 @@ int processFile(const std::string & waveFile, const std::string & suffix, unsign
 		chordExtractor.doIt(&floatBuffer[0], currentTime);
 		inport.Consume();
 		currentFrame++;
+		dumper.doIt();
 	}
 //	clock_t end = clock();
 	reader.Stop();
+	dumper.endExtraction();
 
 	std::ofstream outputPool((waveFile+suffix).c_str());
 

@@ -17,8 +17,6 @@ SET(CLAM_STATIC_LIBS
   ${CMAKE_SOURCE_DIR}/libs/clam/scons/libs/audioio/libclam_audioio.a
 ) 
 
-#SET(CLAM_LIBS clam_core clam_processing clam_audioio)
-
 SET(CLAM_LIB_DEPS 
   mad
   ogg
@@ -29,7 +27,6 @@ SET(CLAM_LIB_DEPS
   vorbisfile
   id3
   fftw3
-  pthread
 )
 
 # Use static libs
