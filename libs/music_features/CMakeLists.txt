@@ -1,8 +1,12 @@
 
 SET(SRCS main.cc frame_division.h enumerated.h)
 
-ADD_LIBRARY(music_features SHARED
+ADD_EXECUTABLE(chords
   ${SRCS}
+)
+
+TARGET_LINK_LIBRARIES(chords
+  ${CLAM_LIBS}
 )
 
 INCLUDE_DIRECTORIES(
