@@ -29,8 +29,6 @@ Queen Mary, University of London
 Adapted from MATLAB code by Chris Harte at Queen Mary
 */
 
-#define USE_SNDFILE 1
-
 #include <iostream>
 #include <fstream>
 #include <cmath>

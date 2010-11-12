@@ -1,6 +1,8 @@
 
 SET(SRCS main.cc frame_division.h enumerated.h)
 
+ADD_DEFINITIONS(-DUSE_SNDFILE -DUSE_FFTW3)
+
 ADD_EXECUTABLE(chords
   ${SRCS}
 )
