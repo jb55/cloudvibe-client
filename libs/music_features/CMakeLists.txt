@@ -1,5 +1,5 @@
 
-SET(SRCS main.cc frame_division.cc enumerated.h)
+SET(SRCS main.cc frame_division.h enumerated.h)
 
 ADD_LIBRARY(music_features SHARED
   ${SRCS}
