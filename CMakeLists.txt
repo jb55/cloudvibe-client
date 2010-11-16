@@ -2,6 +2,10 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(cloudvibe)
 
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  SET(PlatformLinux True)
+ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+
 INCLUDE_DIRECTORIES(
   /opt/local/include
 )
