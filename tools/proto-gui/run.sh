@@ -1,3 +1,4 @@
 #!/bin/sh
 export VERSIONER_PYTHON_PREFER_32_BIT=yes
-python test.py
+export PYTHONPATH=$PYTHONPATH:../../libs/pycloudvibe/
+python proto-gui.py
