@@ -9,6 +9,7 @@ class Song():
   def __init__(self, path):
     self.path = path
     self.filename = os.path.split(path)[1]
+    self.info = {}
 
   def load_all(self):
     self.load_tags()
@@ -23,27 +24,27 @@ class Song():
   def load_tags(self):
     audio = EasyMP3(self.path)
 
-    self.album = ''
-    self.artist = ''
-    self.title = ''
+    self.info["album"] = ''
+    self.info["artist"] = ''
+    self.info["title"] = ''
 
     if audio.has_key("artist"):
-      self.artist = audio["artist"][0]
+      self.info["artist"] = audio["artist"][0]
 
     if audio.has_key("title"):
-      self.title = audio["title"][0]
+      self.info["title"] = audio["title"][0]
 
     if audio.has_key("album"):
-      self.album = audio["album"][0]
+      self.info["album"] = audio["album"][0]
 
 
 class SongJsonEncoder(json.JSONEncoder):
   def default(self, obj):
     if isinstance(obj, Song):
       return { "filename": obj.filename
-             , "artist": obj.artist
-             , "title": obj.title
-             , "album": obj.album
+             , "artist": obj.info["artist"]
+             , "title": obj.info["title"]
+             , "album": obj.info["album"]
              , "md5": obj.md5
              }
     else:
