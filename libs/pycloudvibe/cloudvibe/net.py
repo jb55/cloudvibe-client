@@ -1,9 +1,7 @@
-import urllib2
+import httplib, mimetypes, urllib2
+from MultipartPostHandler import MultipartPostHandler
 from poster.encode import multipart_encode
 from poster.streaminghttp import register_openers
-
-# poster init
-register_openers()
 
 USER = "bill"
 
@@ -27,8 +25,9 @@ class Http():
   def get(self, url, data):
     return makeRequest('GET', url, data)
 
-  def multipart(self, url, data):
-    datagen, headers = multipart_encode(data)
-    req = urllib2.Request(url, datagen, headers)
-    urllib2.urlopen(req)
+  def multipart(self, url, fields):
+    register_openers()
+    datagen, headers = multipart_encode(fields)
+    request = urllib2.Request(url, datagen, headers)
+    return urllib2.urlopen(request)
 

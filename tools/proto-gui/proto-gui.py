@@ -4,7 +4,7 @@
 
 import wx
 from cloudvibe.api import API
-from cloudvibe.song import Song, SongJsonEncoder
+from cloudvibe.song import Song
 
 # begin wxGlade: extracode
 # end wxGlade
@@ -17,7 +17,13 @@ COLUMNS = {
 
 def syncSongs(songs):
   api = API('bill', 'password')
-  api.sync(songs)
+  downloads, uploads = api.sync(songs)
+  for upload in uploads:
+    for song in songs:
+      if song.md5 == upload:
+        api.upload(song)
+        break
+
 
 class FileDropTarget(wx.FileDropTarget):
   """ Implements Drop Target functionality for Files """

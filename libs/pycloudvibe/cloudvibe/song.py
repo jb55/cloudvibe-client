@@ -11,6 +11,14 @@ class Song():
     self.filename = os.path.split(path)[1]
     self.info = {}
 
+  def toDict(self):
+    return { "filename": self.filename
+           , "artist": self.info["artist"]
+           , "title": self.info["title"]
+           , "album": self.info["album"]
+           , "md5": self.md5
+           }
+
   def load_all(self):
     self.load_tags()
     self.load_md5()
@@ -41,11 +49,6 @@ class Song():
 class SongJsonEncoder(json.JSONEncoder):
   def default(self, obj):
     if isinstance(obj, Song):
-      return { "filename": obj.filename
-             , "artist": obj.info["artist"]
-             , "title": obj.info["title"]
-             , "album": obj.info["album"]
-             , "md5": obj.md5
-             }
+      return obj.toDict()
     else:
       return json.JSONEncoder.default(self, obj)
