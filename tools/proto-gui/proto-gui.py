@@ -175,13 +175,13 @@ class MyDialog(wx.Dialog):
     if self.selectedListItem:
       artist = event.GetString()
       self.updateListItemArtist(self.selectedItemIndex, artist)
-      self.selectedSong.artist = artist
+      self.selectedSong.info["artist"] = artist
 
   def onTitleChanged(self, event):
     if self.selectedListItem:
       title = event.GetString()
       self.updateListItemTitle(self.selectedItemIndex, title)
-      self.selectedSong.title = title
+      self.selectedSong.info["title"] = title
 
   def onAddSong(self, event): # wxGlade: MyDialog.<event_onr>
     syncSongs(self.songs.values())
