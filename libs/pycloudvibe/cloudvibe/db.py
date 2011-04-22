@@ -21,6 +21,7 @@ SONG_COLS = [
 , Column('album', String(128))
 , Column('artist', String(128))
 , Column('md5', String(32))
+, Column('path', String(128))
 , Column('filename', String(128))
 ]
 
