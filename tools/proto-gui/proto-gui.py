@@ -11,9 +11,10 @@ from cloudvibe.song import Song, get_all_local_songs, sync_local_db, insert_song
 # end wxGlade
 
 COLUMNS = {
-  "Title": {"id": 0},
-  "Artist": {"id": 1},
-  "Album": {"id": 2},
+  "Status": {"id": 0},
+  "Title": {"id": 1},
+  "Artist": {"id": 2},
+  "Album": {"id": 3},
 }
 
 DB = cloudvibe.db.get_db()
@@ -79,10 +80,15 @@ class MyDialog(wx.Dialog):
     for song in songs:
       self.addSong(song)
 
+
   def initListCtrl(self, l):
-    l.InsertColumn(0, "Title");
-    l.InsertColumn(1, "Artist");
-    l.InsertColumn(2, "Album");
+    titles = [title for title, d in COLUMNS.iteritems()]
+    ids = [d["id"] for title, d in COLUMNS.iteritems()]
+    zipped = zip(ids, titles)
+    zipped.sort()
+
+    for id, title in zipped:
+      l.InsertColumn(id, title);
 
     # Add Drop onr
     dropTarget = FileDropTarget(self.onDropFiles)
@@ -91,7 +97,7 @@ class MyDialog(wx.Dialog):
   def __set_properties(self):
     # begin wxGlade: MyDialog.__set_properties
     self.SetTitle("Song Upload Prototype")
-    self.SetSize(wx.DLG_SZE(self, (281, 195)))
+    self.SetSize(wx.DLG_SZE(self, (500, 300)))
     # end wxGlade
 
   def initRightPanel(self, panel):
@@ -155,7 +161,8 @@ class MyDialog(wx.Dialog):
     l = self.songList
 
     ind = l.GetItemCount()
-    l.InsertStringItem(ind, song.title or song.filename)
+    l.InsertStringItem(ind, "")
+    l.SetStringItem(ind, COLUMNS["Title"]["id"], song.title or song.filename)
     item = l.SetStringItem(ind, COLUMNS["Artist"]["id"], song.artist)
     l.SetStringItem(ind, COLUMNS["Album"]["id"], song.album)
     l.SetItemData(ind, self.songId)
@@ -196,7 +203,9 @@ class MyDialog(wx.Dialog):
       if song.changed:
         changedSongs.append(song)
         song.changed = False
-    syncSongs(changedSongs)
+    db = get_db()
+    print db.session.dirty
+    db.session.commit()
 
   def onSongChanged(self, song):
     song.changed = True
@@ -217,6 +226,9 @@ class MyDialog(wx.Dialog):
 
   def onAddSong(self, event): # wxGlade: MyDialog.<event_onr>
     syncSongs(self.songs.values())
+    db = get_db()
+    print db.session.dirty
+    db.session.commit()
     
 
 # end of class MyDialog
