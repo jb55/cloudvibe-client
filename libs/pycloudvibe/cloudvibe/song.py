@@ -21,11 +21,10 @@ class Song(object):
   def __init__(self, path):
     self.path = path
     self.filename = os.path.split(path)[1]
-
+    self.md5_changed = False
 
   def toDict(self):
     return { "filename": self.filename
-           , "path": self.path
            , "artist": self.artist
            , "title": self.title
            , "album": self.album
@@ -59,6 +58,23 @@ class Song(object):
 
     if audio.has_key("album"):
       self.album = audio["album"][0]
+
+  def write_tags(self):
+    audio = EasyMP3(self.path)
+
+    if audio.has_key("artist"):
+      audio["artist"] = self.artist
+
+    if audio.has_key("title"):
+      audio["title"] = self.title
+
+    if audio.has_key("album"):
+      audio["album"] = self.album
+    
+    audio.save()
+    
+    self.load_md5()
+    self.md5_changed = True
 
 
   def hasTitle(self):
