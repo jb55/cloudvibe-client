@@ -47,5 +47,5 @@ def browse():
 if __name__ == "__main__":
   tray = Tray()
   tray.on('sync', preSync)
-  tray.on('sync', browse)
+  tray.on('site', browse)
   tray.load()
