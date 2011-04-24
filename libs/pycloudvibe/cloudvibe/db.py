@@ -28,7 +28,7 @@ SONG_COLS = [
 , Column('track', Integer)
 , Column('uid', String(36))
 , Column('user_id', Integer)
-, Column('year', DateTime)
+, Column('year', Integer)
 ]
 
 

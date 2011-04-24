@@ -2,7 +2,8 @@ import cloudvibe.db
 from cloudvibe.api import API
 from cloudvibe.song import Song, get_all_local_songs, sync_local_db, insert_songs
 from cloudvibe.util import GetMusicDirs, GetMusicFiles
-from cloudvibe.platform.win_sys_tray_icon import instantiateSysTrayIcon 
+from cloudvibe.platform.win32.win_sys_tray_icon import instantiateSysTrayIcon 
+from cloudvibe.gui import Tray
 
 MONITOR_PATHS = GetMusicDirs()  
 DB = cloudvibe.db.get_db()
@@ -40,4 +41,6 @@ def preSync():
   sync(songs)
 
 if __name__ == "__main__":
-  instantiateSysTrayIcon(preSync)
+  tray = Tray()
+  tray.on('sync', preSync)
+  tray.load()
