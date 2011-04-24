@@ -11,7 +11,7 @@ SONG_COLS = [
   Column('id', Integer, primary_key=True)
 , Column('album', String(128))
 , Column('artist', String(128))
-, Column('bpm', Integer)
+#, Column('bpm', Integer)
 , Column('comments', String(2048))
 , Column('composer', String(128))
 , Column('filename', String(128))
@@ -25,10 +25,10 @@ SONG_COLS = [
 , Column('release_date', DateTime)
 , Column('studio', String(128))
 , Column('title', String(512))
-, Column('track', Integer)
+#, Column('track', Integer)
 , Column('uid', String(36))
 , Column('user_id', Integer)
-, Column('year', Integer)
+#, Column('year', Integer)
 ]
 
 
@@ -147,6 +147,7 @@ def insert_songs(db, songs):
   table = db.song
   db.session.add_all(songs)
   db.session.commit()
+
 
 
 def sync_local_db(db, songs):
