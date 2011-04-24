@@ -45,6 +45,9 @@ class Tray():
     if sys.platform == 'darwin':
       import cloudvibe.platform.darwin.tray as tray
       tray.load(menu)
+    elif sys.platform == 'win32':
+      import cloudvibe.platform.win32.win_sys_tray_icon as tray
+      tray.load(menu)
 
 if __name__ == '__main__':
   tray = Tray()

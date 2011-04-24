@@ -270,7 +270,7 @@ def non_string_iterable(obj):
     else:
         return not isinstance(obj, basestring)
 
-def instantiateSysTrayIcon(menu):
+def load(menu):
     import os
     import urllib, webbrowser
 
@@ -300,11 +300,21 @@ def instantiateSysTrayIcon(menu):
         from time import sleep
 
         sysTrayIcon.do_working()
-        callback("sync")()
-        sysTrayIcon.stop_working()
+        try:
+          callback("sync")()
+        except:       #TODO: code to handle wether we are offline or bug (grey/red icon)
+          sysTrayIcon.stop_working()
+          sysTrayIcon.toggle_offline()
+          print "Unexpected error: ", sys.exc_info()[0]
+          raise
+        finally:  
+          sysTrayIcon.stop_working()
+
+    def site(sysTrayIcon):
+        callback("site")()
 
     menu_options = ((name("sync"), None, sync),
-                    (name("site"), None, callback("site")),
+                    (name("site"), None, site),
                    )
 
     SysTrayIcon(icons, hover_text, menu_options, default_menu_index=1)

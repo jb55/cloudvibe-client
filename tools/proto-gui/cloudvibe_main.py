@@ -1,4 +1,4 @@
-import webbrowser
+import webbrowser 
 import cloudvibe.db
 from cloudvibe.api import API
 from cloudvibe.song import Song, get_all_local_songs, sync_local_db, insert_songs
@@ -20,11 +20,12 @@ def sync(songs):
   for upload in uploads:
     for song in songs:
       if song.md5 == upload:
-        print "Uploading ", song
+        print "Uploading: ", song
         api.upload(song)
         break
 
-  print "Downloads:", downloads
+  print "___________"
+  print "Downloads: ", downloads
   for download in downloads:
     song = api.download(download)
     insert_songs(get_db(), [song])
@@ -33,8 +34,7 @@ def preSync():
   files = find_songs(MONITOR_PATHS)
 
   songs = []
-  for curr_file in files[7:10]:
-    print curr_file
+  for curr_file in files[1:200]:
     song = Song(curr_file)
     song.load_all()
     songs.append(song)

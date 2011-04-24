@@ -43,7 +43,7 @@ class API():
     http = Http()
     url = genUrl(self.user, 'upload')
     data = song.toDict()
-    file_data = open(song.path)
+    file_data = open(song.path, 'rb')
     data["songFile"] = file_data
     res = http.multipart(url, data).read()
     return res
