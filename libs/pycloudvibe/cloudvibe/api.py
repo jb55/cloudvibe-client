@@ -2,8 +2,9 @@ import json
 import os
 from net import Http
 from settings import SERVER
-from song import SongJsonEncoder, default_song_dir
+from song import SongJsonEncoder, default_song_dir, Song, insert_songs
 from threading import * 
+import cloudvibe.db
 import urllib2
 
 
@@ -24,6 +25,7 @@ class API():
     self.user = user
     self.passwd = passwd
 
+
   def sync(self, songs):
     http = Http()
     jsn = encodeSongs(songs)
@@ -33,7 +35,9 @@ class API():
     print res.getcode()
     result = res.read()
     data = json.loads(result)
+    print data
     return (data["download"], data["upload"])
+
 
   def upload(self, song):
     http = Http()
@@ -41,32 +45,33 @@ class API():
     data = song.toDict()
     file_data = open(song.path)
     data["songFile"] = file_data
-    return http.multipart(url, data).read()
+    res = http.multipart(url, data).read()
+    return res
 
-  def download(self, user, md5):
+
+  def download(self, uuid):
+    http = Http()
     song_dir = default_song_dir()
+    url = genUrl(self.user, 'download') + "/" + uuid
 
-    url = genS3Url(user, md5)
+    # call our server to get download links and meta data
+    res = http.get(url)
+    data = json.loads(res.read())
 
-    file_name = url.split('/')[-1]
-    tmp_url = urllib2.urlopen(url)
+    print "Download json", data
+
+    file_url = data["download_url"]
+    file_name = data["filename"]
+
     path = os.path.join(song_dir, file_name) 
-    fp = open(path, 'wb')
-    meta = tmp_url.info()
-    file_size = int(meta.getheaders("Content-Length")[0])
-    print "Downloading: %s Bytes: %s" % (file_name, file_size)
+    http.download(file_url, path)
 
-    file_size_dl = 0
-    block_sz = 8192
-    while True:
-      buffer = tmp_url.read(block_sz)
-      if not buffer:
-        break
-      
-      file_size_dl += block_sz
-      fp.write(buffer)
-      status = r"%10d  [%3.2f%%]" % (file_size_dl, file_size_dl * 100. / file_size)
-      status = status + chr(8)*(len(status)+1)
-      print status
+    song = Song(path)
 
-    fp.close() 
+    print "Done downloading", song
+
+    song.load_dict_tags(data)
+    song.write_tags()
+
+    return song
+

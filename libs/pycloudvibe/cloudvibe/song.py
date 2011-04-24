@@ -7,6 +7,31 @@ import hashlib
 import json
 import os
 
+SONG_COLS = [
+  Column('id', Integer, primary_key=True)
+, Column('album', String(128))
+, Column('artist', String(128))
+, Column('bpm', Integer)
+, Column('comments', String(2048))
+, Column('composer', String(128))
+, Column('filename', String(128))
+, Column('genre', String(32))
+, Column('img', String(36))
+, Column('label', String(128))
+, Column('md5', String(32))
+, Column('modified', String(512))
+, Column('path', String(128))
+, Column('publisher', String(128))
+, Column('release_date', DateTime)
+, Column('studio', String(128))
+, Column('title', String(512))
+, Column('track', Integer)
+, Column('uid', String(36))
+, Column('user_id', Integer)
+, Column('year', Integer)
+]
+
+
 DEFAULT_SONG_DIR = "~/.cloudvibe/music"
 
 def sync_key(songs):
@@ -16,7 +41,7 @@ def sync_key(songs):
 class Song(object):
 
   def __repr__(self):
-    tagrep = " ".join([self.artist, "-", self.title])
+    tagrep = " ".join([self.artist or "?", "-", self.title or "?"])
     rep = tagrep if self.hasTitle() else self.filename
     return "<Song: " + rep + ">"
 
@@ -26,13 +51,27 @@ class Song(object):
     self.filename = os.path.split(path)[1]
     self.md5_changed = False
 
+
+  def fields(self):
+    cols = map(lambda c: c.name, SONG_COLS)
+    return filter(lambda n: n not in ("id", "path"), cols)
+
+
   def toDict(self):
-    return { "filename": self.filename
-           , "artist": self.artist
-           , "title": self.title
-           , "album": self.album
-           , "md5": self.md5
-           }
+    d = {}
+    fields = self.fields()
+    for field in fields:
+      val = getattr(self, field)
+      if val:
+        d[field] = val
+    return d
+
+
+  def fromDict(self, d):
+    fields = self.fields()
+    for field in fields:
+      setattr(self, field, d[field])
+
 
   def load_all(self):
     self.load_tags()
@@ -44,6 +83,10 @@ class Song(object):
     md5 = hashlib.md5()
     md5.update(data)
     self.md5 = md5.hexdigest()
+
+
+  def load_dict_tags(self, data):
+    self.fromDict(data)
 
 
   def load_tags(self):
@@ -62,19 +105,19 @@ class Song(object):
     if audio.has_key("album"):
       self.album = audio["album"][0]
 
+
   def write_tags(self):
     audio = EasyMP3(self.path)
 
-    if audio.has_key("artist"):
-      audio["artist"] = self.artist
+    only_these = ("artist", "title")
 
-    if audio.has_key("title"):
-      audio["title"] = self.title
+    fields = filter(lambda f: f in only_these, self.fields())
 
-    if audio.has_key("album"):
-      audio["album"] = self.album
+    for field in fields:
+      data = getattr(self, field)
+      setattr(audio, field, data)
 
-    audio.save()
+    #audio.save()
 
     self.load_md5()
     self.md5_changed = True

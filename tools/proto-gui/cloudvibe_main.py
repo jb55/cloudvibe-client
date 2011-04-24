@@ -24,16 +24,16 @@ def sync(songs):
         api.upload(song)
         break
 
-  print downloads
+  print "Downloads:", downloads
   for download in downloads:
-    print "next"
-    api.download('bill', download)
+    song = api.download(download)
+    insert_songs(get_db(), [song])
 
 def preSync():
   files = find_songs(MONITOR_PATHS)
 
   songs = []
-  for curr_file in files[2:7]:
+  for curr_file in files[7:10]:
     print curr_file
     song = Song(curr_file)
     song.load_all()
@@ -45,7 +45,8 @@ def browse():
   webbrowser.open("http://getcloudvibe.com")
 
 if __name__ == "__main__":
-  tray = Tray()
-  tray.on('sync', preSync)
-  tray.on('site', browse)
-  tray.load()
+  preSync()
+# tray = Tray()
+# tray.on('sync', preSync)
+# tray.on('site', browse)
+# tray.load()
