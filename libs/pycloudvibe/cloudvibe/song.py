@@ -2,9 +2,12 @@
 from sqlalchemy import *
 from mutagen.mp3 import EasyMP3
 from cloudvibe import util
+import sys
 import hashlib
 import json
 import os
+
+DEFAULT_SONG_DIR = "~/.cloudvibe/music"
 
 def sync_key(songs):
   return map(lambda s: s.md5, songs)
@@ -70,9 +73,9 @@ class Song(object):
 
     if audio.has_key("album"):
       audio["album"] = self.album
-    
+
     audio.save()
-    
+
     self.load_md5()
     self.md5_changed = True
 
@@ -122,3 +125,39 @@ def sync_local_db(db, songs):
   print "Shared md5s", shared_md5s
 
 
+def find_songs(dirs):
+  """ Returns a list of songs in the given directories """
+  files = []
+  for dir in dirs:
+    for dirpath, dirnames, filenames in os.walk(dir):
+      for filename in [f for f in filenames if f.endswith(".mp3")]:
+        files.append(os.path.join(dirpath, filename).encode("utf-8"))
+  return files
+
+
+def song_dirs():
+  default = [DEFAULT_SONG_DIR]
+  f = lambda: default
+
+  if sys.platform == 'darwin':
+    from cloudvibe.platform.darwin.paths import song_dirs
+    f = song_dirs
+  elif sys.platform == 'win32':
+    from cloudvibe.platform.win32.paths import song_dirs
+    f = song_dirs
+
+  return f()
+
+
+def default_song_dir():
+  default = DEFAULT_SONG_DIR
+  f = lambda: default
+
+  if sys.platform == 'darwin':
+    from cloudvibe.platform.darwin.paths import default_song_dir
+    f = default_song_dir
+  elif sys.platform == 'win32':
+    from cloudvibe.platform.win32.paths import default_song_dir
+    f = default_song_dir
+
+  return f()

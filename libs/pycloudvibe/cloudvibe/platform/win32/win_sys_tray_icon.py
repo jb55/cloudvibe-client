@@ -270,17 +270,17 @@ def non_string_iterable(obj):
     else:
         return not isinstance(obj, basestring)
 
-def instantiateSysTrayIcon(sync_func):
+def instantiateSysTrayIcon(menu):
     import os
     import urllib, webbrowser
 
-    path = os.path.abspath("").replace("\\tools\\proto-gui", \
-      "\\libs\\pycloudvibe\\cloudvibe\\platform\\")
-    icon_plain = path + "cloudvibe_big.ico"
-    icon_work_middle = path + "cloudvibe_big_work_transition_middle.ico"
-    icon_work_final = path + "cloudvibe_big_work_transition_final.ico"
-    icon_work = path + "cloudvibe_big_work.ico" 
-    icon_off = path + "cloudvibe_big_grey.ico" 
+    path = "resources"
+    res = lambda f: os.path.join(path, f)
+    icon_plain = res("cloudvibe_big.ico")
+    icon_work_middle = res("cloudvibe_big_work_transition_middle.ico")
+    icon_work_final = res("cloudvibe_big_work_transition_final.ico")
+    icon_work = res("cloudvibe_big_work.ico")
+    icon_off = res("cloudvibe_big_grey.ico")
     icons = {'icon_plain': icon_plain, 'icon_work': icon_work, 'icon_off': icon_off, \
       'icon_work_transition_middle': icon_work_middle, 'icon_work_transition_final': icon_work_final}
 
@@ -290,19 +290,21 @@ def instantiateSysTrayIcon(sync_func):
     hover_text = {"hover_text_plain": hover_text_plain, "hover_text_work": hover_text_work, \
       "hover_text_off": hover_text_off}
 
+    def callback(event):
+      return menu[event][1]
+
+    def name(event):
+      return menu[event][0]
+
     def sync(sysTrayIcon):
         from time import sleep
 
         sysTrayIcon.do_working()
-        sync_func() 
+        callback("sync")()
         sysTrayIcon.stop_working()
 
-    def web(sysTrayIcon):
-        url = urllib.urlopen("http://CloudVi.be/")
-        webbrowser.open(url.geturl())
-
-    menu_options = (('Sync', None, sync),
-                    ('Visit CloudVi.be', None, web),
+    menu_options = ((name("sync"), None, sync),
+                    (name("site"), None, callback("site")),
                    )
 
     SysTrayIcon(icons, hover_text, menu_options, default_menu_index=1)

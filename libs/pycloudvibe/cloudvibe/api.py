@@ -2,9 +2,8 @@ import json
 import os
 from net import Http
 from settings import SERVER
-from song import SongJsonEncoder
+from song import SongJsonEncoder, default_song_dir
 from threading import * 
-from util import GetDefaultMusicDirs
 import urllib2
 
 
@@ -45,7 +44,7 @@ class API():
     return http.multipart(url, data).read()
 
   def download(self, user, md5):
-    song_dir = GetDefaultMusicDirs()
+    song_dir = default_song_dir()
 
     url = genS3Url(user, md5)
 

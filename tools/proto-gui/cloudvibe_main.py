@@ -1,11 +1,11 @@
+import webbrowser
 import cloudvibe.db
 from cloudvibe.api import API
 from cloudvibe.song import Song, get_all_local_songs, sync_local_db, insert_songs
-from cloudvibe.util import GetMusicDirs, GetMusicFiles
-from cloudvibe.platform.win32.win_sys_tray_icon import instantiateSysTrayIcon 
+from cloudvibe.song import song_dirs, find_songs
 from cloudvibe.gui import Tray
 
-MONITOR_PATHS = GetMusicDirs()  
+MONITOR_PATHS = song_dirs()  
 DB = cloudvibe.db.get_db()
 
 def get_db():
@@ -20,6 +20,7 @@ def sync(songs):
   for upload in uploads:
     for song in songs:
       if song.md5 == upload:
+        print "Uploading ", song
         api.upload(song)
         break
 
@@ -29,10 +30,10 @@ def sync(songs):
     api.download('bill', download)
 
 def preSync():
-  files = GetMusicFiles(get_paths())
+  files = find_songs(MONITOR_PATHS)
 
   songs = []
-  for curr_file in files[:150]:
+  for curr_file in files[2:7]:
     print curr_file
     song = Song(curr_file)
     song.load_all()
@@ -40,7 +41,11 @@ def preSync():
 
   sync(songs)
 
+def browse():
+  webbrowser.open("http://getcloudvibe.com")
+
 if __name__ == "__main__":
   tray = Tray()
   tray.on('sync', preSync)
+  tray.on('sync', browse)
   tray.load()

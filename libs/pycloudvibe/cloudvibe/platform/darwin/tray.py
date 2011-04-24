@@ -21,7 +21,7 @@ class CloudvibeApp(NSApplication):
     # Make statusbar item
     statusbar = NSStatusBar.systemStatusBar()
     self.statusitem = statusbar.statusItemWithLength_(NSVariableStatusItemLength)
-    self.icon = NSImage.alloc().initByReferencingFile_('platform/cloudvibe_big.ico')
+    self.icon = NSImage.alloc().initByReferencingFile_('resources/cloudvibe_big.ico')
     self.icon.setScalesWhenResized_(True)
     self.icon.setSize_((20, 20))
     self.statusitem.setImage_(self.icon)
