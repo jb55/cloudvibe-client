@@ -22,7 +22,7 @@ SONG_COLS = [
 , Column('modified', String(512))
 , Column('path', String(128))
 , Column('publisher', String(128))
-, Column('release_date', DateTime)
+#, Column('release_date', DateTime)
 , Column('studio', String(128))
 , Column('title', String(512))
 #, Column('track', Integer)
