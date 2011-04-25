@@ -99,7 +99,7 @@ class Song(object):
 
 
   def fromDict(self, d):
-    fields = self.fields()
+    fields = util.intersect(self.fields(), d.keys())
     for field in fields:
       setattr(self, field, d[field])
 
