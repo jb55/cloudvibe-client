@@ -34,7 +34,7 @@ def preSync():
   files = find_songs(MONITOR_PATHS)
 
   songs = []
-  for curr_file in files[1:200]:
+  for curr_file in files[5:10]:
     song = Song(curr_file)
     song.load_all()
     songs.append(song)
