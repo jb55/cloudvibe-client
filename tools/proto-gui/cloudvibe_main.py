@@ -39,7 +39,9 @@ def preSync():
     song.load_all()
     songs.append(song)
 
-  sync(songs)
+  to_delete = sync_local_db(get_db(), songs) 
+
+  sync(get_all_local_songs(get_db()))
 
 def browse():
   webbrowser.open("http://getcloudvibe.com")

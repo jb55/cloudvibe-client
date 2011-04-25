@@ -90,7 +90,11 @@ class Song(object):
 
 
   def load_tags(self):
-    audio = EasyMP3(self.path)
+    audio = None
+    try:
+      audio = EasyMP3(self.path)
+    except: 
+      pass
 
     self.album = ''
     self.artist = ''
@@ -148,8 +152,6 @@ def insert_songs(db, songs):
   db.session.add_all(songs)
   db.session.commit()
 
-
-
 def sync_local_db(db, songs):
   """ Syncs a list of songs with the local database """
   table = db.song
@@ -168,6 +170,7 @@ def sync_local_db(db, songs):
   print "Missing songs", songs_to_add
   print "Shared md5s", shared_md5s
 
+  return local_missing
 
 def find_songs(dirs):
   """ Returns a list of songs in the given directories """
