@@ -22,7 +22,6 @@ def doUpload(api, uploads, songs):
         api.upload(song)
         break
 
-
 def doDownload(api, downloads):
   for download in downloads:
     song = api.download(download)
@@ -55,8 +54,8 @@ def browse():
   webbrowser.open("http://getcloudvibe.com")
 
 if __name__ == "__main__":
-  preSync()
-# tray = Tray()
-# tray.on('sync', preSync)
-# tray.on('site', browse)
-# tray.load()
+  #preSync()
+  tray = Tray()
+  tray.on('sync', preSync)
+  tray.on('site', browse)
+  tray.load()
