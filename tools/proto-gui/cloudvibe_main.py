@@ -14,9 +14,7 @@ def get_db():
 def get_paths():
   return MONITOR_PATHS
 
-def sync(songs):
-  api = API('bill', 'password')
-  downloads, uploads = api.sync(songs)
+def doUpload(api, uploads, songs):
   for upload in uploads:
     for song in songs:
       if song.md5 == upload:
@@ -24,17 +22,27 @@ def sync(songs):
         api.upload(song)
         break
 
-  print "___________"
-  print "Downloads: ", downloads
+
+def doDownload(api, downloads):
   for download in downloads:
     song = api.download(download)
     insert_songs(get_db(), [song])
+
+def sync(songs):
+  api = API('bill', 'password')
+  downloads, uploads = api.sync(songs)
+  print "To Upload:", uploads
+  print "To Download:", downloads
+  doDownload(api, downloads)
+  doUpload(api, uploads, songs)
+
+
 
 def preSync():
   files = find_songs(MONITOR_PATHS)
 
   songs = []
-  for curr_file in files[5:10]:
+  for curr_file in files:
     song = Song(curr_file)
     song.load_all()
     songs.append(song)

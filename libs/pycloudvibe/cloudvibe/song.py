@@ -1,6 +1,7 @@
 
 from sqlalchemy import *
 from mutagen.mp3 import EasyMP3
+from mutagen.id3 import ID3
 from cloudvibe import util
 import sys
 import hashlib
@@ -19,7 +20,8 @@ SONG_COLS = [
 , Column('img', String(36))
 , Column('label', String(128))
 , Column('md5', String(32))
-, Column('modified', String(512))
+, Column('old_md5', String(32))
+, Column('modified', Integer)
 , Column('path', String(128))
 , Column('publisher', String(128))
 #, Column('release_date', DateTime)
@@ -31,6 +33,35 @@ SONG_COLS = [
 #, Column('year', Integer)
 ]
 
+VALID_KEYS = (
+  "album",
+  "bpm",
+  "compilation", # iTunes extension
+  "composer",
+  "copyright",
+  "encodedby",
+  "lyricist",
+  "length",
+  "media",
+  "mood",
+  "title",
+  "version",
+  "artist",
+  "performer",
+  "conductor",
+  "arranger",
+  "discnumber",
+  "organization",
+  "tracknumber",
+  "author",
+  "albumartistsort", # iTunes extension
+  "albumsort",
+  "composersort", # iTunes extension
+  "artistsort",
+  "titlesort",
+  "isrc",
+  "discsubtitle",
+)
 
 DEFAULT_SONG_DIR = "~/.cloudvibe/music"
 
@@ -93,7 +124,7 @@ class Song(object):
     audio = None
     try:
       audio = EasyMP3(self.path)
-    except: 
+    except:
       pass
 
     self.album = ''
@@ -111,20 +142,22 @@ class Song(object):
 
 
   def write_tags(self):
-    audio = EasyMP3(self.path)
+    try:
+      tags = ID3(self.path)
+    except:
+      tags = ID3()
 
-    only_these = ("artist", "title")
-
-    fields = filter(lambda f: f in only_these, self.fields())
+    fields = filter(lambda f: f in VALID_KEYS, self.fields())
 
     for field in fields:
       data = getattr(self, field)
-      setattr(audio, field, data)
+      setattr(tags, field, data)
 
-    #audio.save()
+    tags.save(self.path)
 
+    self.old_md5 = self.md5
     self.load_md5()
-    self.md5_changed = True
+    self.modified = 1
 
 
   def hasTitle(self):

@@ -58,8 +58,6 @@ class API():
     res = http.get(url)
     data = json.loads(res.read())
 
-    print "Download json", data
-
     file_url = data["download_url"]
     file_name = data["filename"]
 
