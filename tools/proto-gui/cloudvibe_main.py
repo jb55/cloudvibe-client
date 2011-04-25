@@ -42,7 +42,7 @@ def preSync():
   files = find_songs(MONITOR_PATHS)
 
   songs = []
-  for curr_file in files:
+  for curr_file in files[1:100]:
     song = Song(curr_file)
     song.load_all()
     songs.append(song)
