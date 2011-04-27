@@ -3,6 +3,7 @@ from sqlalchemy import *
 from mutagen.mp3 import EasyMP3
 from mutagen.id3 import ID3
 from cloudvibe import util
+from cloudvibe.settings import DEFAULT_PATH
 import sys
 import hashlib
 import json
@@ -63,7 +64,7 @@ VALID_KEYS = (
   "discsubtitle",
 )
 
-DEFAULT_SONG_DIR = "~/.cloudvibe/music"
+DEFAULT_SONG_DIR = os.path.join(DEFAULT_PATH, "music")
 
 def sync_key(songs):
   return map(lambda s: s.md5, songs)
