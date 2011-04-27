@@ -218,6 +218,7 @@ def find_songs(dirs):
 
 def song_dirs():
   default = [DEFAULT_SONG_DIR]
+  return default
   f = lambda: default
 
   if sys.platform == 'darwin':
@@ -237,6 +238,7 @@ def song_dirs():
 
 def default_song_dir():
   default = DEFAULT_SONG_DIR
+  return default
   f = lambda: default
 
   if sys.platform == 'darwin':
