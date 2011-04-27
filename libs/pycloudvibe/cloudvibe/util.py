@@ -15,4 +15,4 @@ def difference(a, b):
 
 def ensure_path(p):
   if not os.path.exists(p):
-    os.mkdir(path)
+    os.mkdir(p)
