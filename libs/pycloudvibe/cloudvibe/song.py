@@ -216,6 +216,7 @@ def find_songs(dirs):
 
 def song_dirs():
   default = [DEFAULT_SONG_DIR]
+  map(util.ensure_path, default)
   return default
   f = lambda: default
 
@@ -238,6 +239,7 @@ def song_dirs():
 
 def default_song_dir():
   default = DEFAULT_SONG_DIR
+  util.ensure_path(default)
   return default
   f = lambda: default
 
