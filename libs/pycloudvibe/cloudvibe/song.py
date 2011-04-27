@@ -227,7 +227,12 @@ def song_dirs():
     from cloudvibe.platform.win32.paths import song_dirs
     f = song_dirs
 
-  return f()
+  dirs = f()
+
+  if len(dirs) == 0:
+    return default
+
+  return dirs
 
 
 def default_song_dir():
@@ -241,4 +246,6 @@ def default_song_dir():
     from cloudvibe.platform.win32.paths import default_song_dir
     f = default_song_dir
 
-  return f()
+  d = f()
+
+  return d or default

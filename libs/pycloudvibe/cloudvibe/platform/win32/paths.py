@@ -39,7 +39,6 @@ def song_dirs():
 
 def default_song_dir():
   """ Gets the default music directory """
-  default = lambda: os.path.expanduser("~/.cloudvibe/music")
   common = lambda: shell.SHGetFolderPath(0, shellcon.CSIDL_COMMON_MUSIC, 0, 0)
   user = lambda: shell.SHGetFolderPath(0, shellcon.CSIDL_MYMUSIC, 0, 0)
-  return user() or common() or default()
+  return user() or common()
