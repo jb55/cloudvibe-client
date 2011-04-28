@@ -3,6 +3,7 @@ from sqlalchemy import *
 from mutagen.mp3 import EasyMP3
 from mutagen.id3 import ID3
 from cloudvibe import util
+from cloudvibe.settings import DEFAULT_SONG_DIR
 import sys
 import hashlib
 import json
@@ -62,8 +63,6 @@ VALID_KEYS = (
   "isrc",
   "discsubtitle",
 )
-
-DEFAULT_SONG_DIR = "~/.cloudvibe/music"
 
 def sync_key(songs):
   return map(lambda s: s.md5, songs)
@@ -183,7 +182,6 @@ def get_all_local_songs(db):
   """ Gets all of the songs that are stored in the database """
   return db.session.query(Song).all()
 
-
 def insert_songs(db, songs):
   """ Inserts songs into the database """
   table = db.song
@@ -196,19 +194,21 @@ def sync_local_db(db, songs):
   sel = table.select()
   rs = sel.execute()
 
-  db_md5s = sync_key(rs)
+  db_songs = [song for song in rs]
+  db_md5s = sync_key(db_songs)
   md5s = sync_key(songs)
   shared_md5s = util.intersect(db_md5s, md5s)
   db_missing = util.difference(shared_md5s, md5s)
   local_missing = util.difference(shared_md5s, db_md5s)
 
+  deleted = filter(lambda s: s.uid in local_missing, db_songs)
   songs_to_add = filter(lambda s: s.md5 in db_missing, songs)
   insert_songs(db, songs_to_add)
 
   print "Missing songs", songs_to_add
   print "Shared md5s", shared_md5s
 
-  return local_missing
+  return deleted
 
 def find_songs(dirs):
   """ Returns a list of songs in the given directories """
@@ -222,6 +222,8 @@ def find_songs(dirs):
 
 def song_dirs():
   default = [DEFAULT_SONG_DIR]
+  map(util.ensure_path, default)
+  return default
   f = lambda: default
 
   if sys.platform == 'darwin':
@@ -231,11 +233,20 @@ def song_dirs():
     from cloudvibe.platform.win32.paths import song_dirs
     f = song_dirs
 
-  return f()
+  dirs = f()
+
+  if len(dirs) == 0:
+    dirs = default
+
+  map(util.ensure_path, dirs)
+
+  return dirs
 
 
 def default_song_dir():
   default = DEFAULT_SONG_DIR
+  util.ensure_path(default)
+  return default
   f = lambda: default
 
   if sys.platform == 'darwin':
@@ -245,4 +256,8 @@ def default_song_dir():
     from cloudvibe.platform.win32.paths import default_song_dir
     f = default_song_dir
 
-  return f()
+  d = f() or default
+
+  util.ensure_path(d)
+
+  return d

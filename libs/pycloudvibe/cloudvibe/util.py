@@ -12,3 +12,7 @@ def intersect(a, b):
 
 def difference(a, b):
   return set(a) ^ set(b)
+
+def ensure_path(p):
+  if not os.path.exists(p):
+    os.mkdir(p)

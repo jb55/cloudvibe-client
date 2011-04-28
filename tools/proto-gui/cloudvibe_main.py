@@ -6,7 +6,6 @@ from cloudvibe.song import song_dirs, find_songs
 from cloudvibe.gui import Tray
 from cloudvibe.playlist import *
 
-MONITOR_PATHS = song_dirs()  
 DB = cloudvibe.db.get_db()
 
 def get_db():
@@ -21,14 +20,19 @@ def doUpload(api, uploads, songs):
   for upload in uploads:
     for song in songs:
       if song.md5 == upload:
-        print "Uploading: ", song
-        api.upload(song)
+        print "Uploading ", song, "... ",
+        uid = api.upload(song)
+        song.uid = uid
+        get_db().session.commit()
+        print "Done."
         break
 
 
 def doDownload(api, downloads):
   for download in downloads:
+    print "Downloading ", download, "... ",
     song = api.download(download)
+    print "Done."
     insert_songs(get_db(), [song])
 
 
@@ -65,28 +69,34 @@ def doPlaylistSync():
 
       createPlaylist(get_db(), to_add_to_db[t], songs)  
 
-def sync(songs):
+def sync(songs, deleted):
   api = API('bill', 'password')
   downloads, uploads = api.sync(songs)
   print "To Upload:", uploads
   print "To Download:", downloads
+  if len(deleted) > 0:
+    print "Redownloading deleted songs"
+    print deleted
+    doDownload(api, deleted)
   doDownload(api, downloads)
   doUpload(api, uploads, songs)
   doPlaylistSync()
 
 
 def preSync():
-  files = find_songs(MONITOR_PATHS)
+  db = get_db()
+  dirs = song_dirs()
+  files = find_songs(song_dirs())
 
   songs = []
-  for curr_file in files[1:100]:
+  for curr_file in files:
     song = Song(curr_file)
     song.load_all()
     songs.append(song)
 
   to_delete = sync_local_db(get_db(), songs) 
 
-  sync(get_all_local_songs(get_db()))
+  sync(get_all_local_songs(db), to_delete)
 
 def browse():
   webbrowser.open("http://getcloudvibe.com")
