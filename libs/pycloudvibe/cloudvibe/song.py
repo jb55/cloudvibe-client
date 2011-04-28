@@ -110,7 +110,12 @@ class Song(object):
 
 
   def load_md5(self):
-    data = open(self.path).read()
+    data = None
+    try:
+      data = open(self.path).read()
+    except:
+      return 
+
     md5 = hashlib.md5()
     md5.update(data)
     self.md5 = md5.hexdigest()
@@ -125,7 +130,7 @@ class Song(object):
     try:
       audio = EasyMP3(self.path)
     except:
-      pass
+      return
 
     self.album = ''
     self.artist = ''

@@ -19,9 +19,7 @@ class Database():
     playlist_table = Table('playlist', self.meta, *PLAYLIST_COLS)
     self.playlist = playlist_table
 
-    playlist_to_song = Table('playlist_to_song', self.meta,
-      *PLAYLIST_SONG_COLS
-    )
+    playlist_to_song = Table('playlist_to_song', self.meta, *PLAYLIST_SONG_COLS)
 
     song_table = Table('song', self.meta, *SONG_COLS)
     self.song = song_table
@@ -29,7 +27,6 @@ class Database():
     mapper(Playlist, playlist_table, properties={
         'children': relationship(Song, secondary=playlist_to_song)
     })
-
     mapper(Song, song_table)
 
     init_db(self.meta)
